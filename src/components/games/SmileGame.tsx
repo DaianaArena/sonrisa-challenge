@@ -25,7 +25,6 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     }
     return 0;
   });
-  const startTimeRef = useRef<number>(0);
   const animationFrameRef = useRef<number>();
 
   // Cargar el modelo de detección de landmarks
@@ -119,7 +118,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Dibujar todos los puntos de la cara en azul claro
-            faces[0].keypoints.forEach((point, index) => {
+            faces[0].keypoints.forEach(point => {
               ctx.beginPath();
               ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
               ctx.fillStyle = 'rgba(0, 150, 255, 0.8)';
@@ -204,14 +203,29 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     animationFrameRef.current = requestAnimationFrame(detectSmile);
   };
 
+  // Iniciar la detección cuando el componente se monte
+  useEffect(() => {
+    console.log('Componente montado, iniciando detección...');
+    detectSmile();
+    
+    return () => {
+      if (animationFrameRef.current) {
+        console.log('Limpiando animation frame');
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
   // Efecto para manejar el temporizador
   useEffect(() => {
     let timer: NodeJS.Timeout;
     
     if (isPlaying && !gameOver) {
+      console.log('Iniciando temporizador...');
       timer = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
+            console.log('Tiempo terminado');
             setGameOver(true);
             setIsPlaying(false);
             if (smileScore > highScore) {
@@ -227,23 +241,11 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
     return () => {
       if (timer) {
+        console.log('Limpiando temporizador');
         clearInterval(timer);
       }
     };
   }, [isPlaying, gameOver, smileScore, highScore]);
-
-  // Iniciar la detección cuando el componente se monte
-  useEffect(() => {
-    console.log('Componente montado, iniciando detección...');
-    detectSmile();
-    
-    return () => {
-      if (animationFrameRef.current) {
-        console.log('Limpiando animation frame');
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, []);
 
   if (isModelLoading) {
     return (
@@ -256,7 +258,12 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   }
 
   if (gameOver) {
-    return <GameResult score={Math.round(smileScore)} highScore={highScore} onRestart={detectSmile} onBack={onBack} />;
+    return <GameResult score={Math.round(smileScore)} highScore={highScore} onRestart={() => {
+      setIsPlaying(true);
+      setGameOver(false);
+      setSmileScore(0);
+      setTimeLeft(10);
+    }} onBack={onBack} />;
   }
 
   return (
@@ -304,7 +311,12 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         {!isPlaying && (
           <div className="text-center">
             <button
-              onClick={detectSmile}
+              onClick={() => {
+                setIsPlaying(true);
+                setGameOver(false);
+                setSmileScore(0);
+                setTimeLeft(10);
+              }}
               className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg mb-4"
             >
               {timeLeft === 10 ? 'Iniciar Juego' : 'Reintentar'}
