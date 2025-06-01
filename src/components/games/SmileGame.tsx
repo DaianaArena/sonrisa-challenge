@@ -111,6 +111,12 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     const mouthPoints = [61, 291, 13, 14];
     mouthPoints.forEach(index => {
       const [x, y] = landmarks[index];
+      // Dibujar círculo exterior
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#000000';
+      ctx.fill();
+      // Dibujar círculo interior
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, 2 * Math.PI);
       ctx.fillStyle = score < 10 ? '#ff4444' : '#44ff44';
@@ -125,25 +131,26 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     ctx.lineTo(topLip[0], topLip[1]);
     ctx.closePath();
     ctx.strokeStyle = score < 10 ? '#ff4444' : '#44ff44';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.stroke();
 
     // Dibujar etiquetas con las distancias
-    ctx.font = '12px Arial';
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 3;
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 4;
 
     // Etiqueta para el ancho de la boca
     const widthLabel = `Ancho: ${mouthWidth.toFixed(1)}px`;
     const widthX = (leftMouth[0] + rightMouth[0]) / 2;
-    const widthY = Math.min(leftMouth[1], rightMouth[1]) - 10;
+    const widthY = Math.min(leftMouth[1], rightMouth[1]) - 15;
+    ctx.strokeStyle = '#000000';
     ctx.strokeText(widthLabel, widthX, widthY);
+    ctx.fillStyle = '#ffffff';
     ctx.fillText(widthLabel, widthX, widthY);
 
     // Etiqueta para el alto de la boca
     const heightLabel = `Alto: ${mouthHeight.toFixed(1)}px`;
-    const heightX = Math.max(rightMouth[0], leftMouth[0]) + 10;
+    const heightX = Math.max(rightMouth[0], leftMouth[0]) + 15;
     const heightY = (topLip[1] + bottomLip[1]) / 2;
     ctx.strokeText(heightLabel, heightX, heightY);
     ctx.fillText(heightLabel, heightX, heightY);
@@ -151,14 +158,14 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     // Etiqueta para el ratio
     const ratioLabel = `Ratio: ${smileRatio.toFixed(2)}`;
     const ratioX = (leftMouth[0] + rightMouth[0]) / 2;
-    const ratioY = Math.max(bottomLip[1], rightMouth[1]) + 20;
+    const ratioY = Math.max(bottomLip[1], rightMouth[1]) + 25;
     ctx.strokeText(ratioLabel, ratioX, ratioY);
     ctx.fillText(ratioLabel, ratioX, ratioY);
 
     // Etiqueta para el score
     const scoreLabel = `Score: ${score.toFixed(1)}`;
-    const scoreX = 10;
-    const scoreY = 20;
+    const scoreX = 50;
+    const scoreY = 30;
     ctx.strokeText(scoreLabel, scoreX, scoreY);
     ctx.fillText(scoreLabel, scoreX, scoreY);
   };
@@ -179,6 +186,31 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         setSmileScore(score);
         drawLandmarks(landmarks, score);
 
+        // Dibujar todos los puntos de la cara para debug
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            // Dibujar todos los puntos de la cara en gris claro
+            faces[0].keypoints.forEach(point => {
+              ctx.beginPath();
+              ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
+              ctx.fillStyle = 'rgba(200, 200, 200, 0.3)';
+              ctx.fill();
+            });
+
+            // Dibujar los puntos específicos que usamos para la sonrisa en amarillo
+            const importantPoints = [61, 291, 13, 14];
+            importantPoints.forEach(index => {
+              const point = faces[0].keypoints[index];
+              ctx.beginPath();
+              ctx.arc(point.x, point.y, 4, 0, 2 * Math.PI);
+              ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+              ctx.fill();
+            });
+          }
+        }
+
         // Si el score es muy bajo (no hay sonrisa), terminar el juego
         if (score < 10) {
           setGameOver(true);
@@ -190,7 +222,18 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
           return;
         }
       } else {
-        // Si no se detecta cara, terminar el juego
+        // Si no se detecta cara, mostrar mensaje de error
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = 'red';
+            ctx.textAlign = 'center';
+            ctx.fillText('No se detecta cara', canvas.width / 2, canvas.height / 2);
+          }
+        }
         setGameOver(true);
         setIsPlaying(false);
         if (smileScore > highScore) {
@@ -201,6 +244,18 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Error detecting smile:', error);
+      // Mostrar error en el canvas
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.font = 'bold 24px Arial';
+          ctx.fillStyle = 'red';
+          ctx.textAlign = 'center';
+          ctx.fillText('Error en la detección', canvas.width / 2, canvas.height / 2);
+        }
+      }
     }
 
     // Solicitar el siguiente frame
@@ -289,7 +344,12 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
           />
           <canvas
             ref={canvasRef}
-            className="absolute top-0 left-0 w-full h-full"
+            className="absolute top-0 left-0 rounded-lg"
+            style={{
+              width: '640px',
+              height: '480px',
+              pointerEvents: 'none'
+            }}
             width={640}
             height={480}
           />
@@ -303,6 +363,9 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
               </div>
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
                 {smileScore < 10 ? '¡Sonríe más!' : '¡Bien! Mantén la sonrisa'}
+              </div>
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
+                Puntos detectados: {detector ? 'Sí' : 'No'}
               </div>
             </>
           )}
