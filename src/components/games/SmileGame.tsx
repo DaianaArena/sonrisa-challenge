@@ -81,17 +81,37 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
   // Función para detectar la sonrisa en cada frame
   const detectSmile = async () => {
-    if (!detector || !webcamRef.current || !isPlaying) return;
+    if (!detector || !webcamRef.current || !isPlaying) {
+      console.log('Condiciones iniciales:', {
+        detector: !!detector,
+        webcamRef: !!webcamRef.current,
+        isPlaying
+      });
+      return;
+    }
 
     const video = webcamRef.current.video;
-    if (!video) return;
+    if (!video) {
+      console.log('No hay video disponible');
+      return;
+    }
 
     try {
+      console.log('Intentando detectar caras...');
       const faces = await detector.estimateFaces(video);
       console.log('Faces detectadas:', faces.length);
       
       if (faces.length > 0) {
+        console.log('Cara detectada, procesando landmarks...');
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
+        console.log('Número de landmarks:', landmarks.length);
+        console.log('Landmarks de la boca:', {
+          leftMouth: landmarks[61],
+          rightMouth: landmarks[291],
+          topLip: landmarks[13],
+          bottomLip: landmarks[14]
+        });
+
         const score = calculateSmileScore(landmarks);
         console.log('Score calculado:', score);
         setSmileScore(score);
@@ -101,6 +121,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         if (canvas) {
           const ctx = canvas.getContext('2d');
           if (ctx) {
+            console.log('Dibujando en el canvas...');
             // Limpiar el canvas primero
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -117,56 +138,12 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
               ctx.fillText(index.toString(), point.x + 4, point.y + 4);
             });
 
-            // Dibujar los puntos específicos que usamos para la sonrisa en rojo
-            const importantPoints = [61, 291, 13, 14];
-            importantPoints.forEach(index => {
-              const point = faces[0].keypoints[index];
-              ctx.beginPath();
-              ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI);
-              ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
-              ctx.fill();
-              
-              // Dibujar el número del punto en blanco
-              ctx.font = 'bold 10px Arial';
-              ctx.fillStyle = 'white';
-              ctx.fillText(index.toString(), point.x + 8, point.y + 8);
-            });
-
-            // Dibujar las líneas de la boca
-            const leftMouth = landmarks[61];
-            const rightMouth = landmarks[291];
-            const topLip = landmarks[13];
-            const bottomLip = landmarks[14];
-
-            ctx.beginPath();
-            ctx.moveTo(leftMouth[0], leftMouth[1]);
-            ctx.lineTo(rightMouth[0], rightMouth[1]);
-            ctx.lineTo(bottomLip[0], bottomLip[1]);
-            ctx.lineTo(topLip[0], topLip[1]);
-            ctx.closePath();
-            ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // Mostrar información de debug
-            const mouthWidth = Math.sqrt(
-              Math.pow(rightMouth[0] - leftMouth[0], 2) +
-              Math.pow(rightMouth[1] - leftMouth[1], 2)
-            );
-            const mouthHeight = Math.sqrt(
-              Math.pow(bottomLip[0] - topLip[0], 2) +
-              Math.pow(bottomLip[1] - topLip[1], 2)
-            );
-            const smileRatio = mouthWidth / mouthHeight;
-
-            ctx.font = 'bold 16px Arial';
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'left';
-            ctx.fillText(`Ancho: ${mouthWidth.toFixed(1)}`, 10, 30);
-            ctx.fillText(`Alto: ${mouthHeight.toFixed(1)}`, 10, 50);
-            ctx.fillText(`Ratio: ${smileRatio.toFixed(2)}`, 10, 70);
-            ctx.fillText(`Score: ${score.toFixed(1)}`, 10, 90);
+            console.log('Puntos dibujados');
+          } else {
+            console.log('No se pudo obtener el contexto del canvas');
           }
+        } else {
+          console.log('No se encontró el elemento canvas');
         }
 
         // Si el score es muy bajo (no hay sonrisa), terminar el juego
