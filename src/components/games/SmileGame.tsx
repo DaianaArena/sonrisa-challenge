@@ -30,6 +30,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   });
   const animationFrameRef = useRef<number>();
   const lastScoreUpdateRef = useRef<number>(0);
+  const timerRef = useRef<NodeJS.Timeout>();
 
   // Agregar efecto para debug del score
   useEffect(() => {
@@ -80,6 +81,11 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
       Math.pow(bottomLip[0] - topLip[0], 2) +
       Math.pow(bottomLip[1] - topLip[1], 2)
     );
+
+    // Si la altura de la boca es muy pequeña, retornamos 0
+    if (mouthHeight < 20) {
+      return 0;
+    }
 
     const smileRatio = mouthWidth / mouthHeight;
     console.log('Métricas de sonrisa:', {
@@ -246,14 +252,22 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
   // Efecto para manejar el temporizador
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    
     if (isPlaying && !gameOver) {
       console.log('Iniciando juego, reiniciando contadores');
       lastScoreUpdateRef.current = Date.now();
       setSmileScore(0);
-      timer = setInterval(() => {
+      setDetectionScore(0);
+      setTimeLeft(10); // Reiniciamos a 10 segundos
+
+      // Limpiamos cualquier timer existente
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+
+      // Iniciamos el nuevo timer
+      timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
+          console.log('Tiempo restante:', prev - 1);
           if (prev <= 1) {
             console.log('Tiempo terminado, finalizando juego');
             setGameOver(true);
@@ -270,11 +284,21 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     }
 
     return () => {
-      if (timer) {
-        clearInterval(timer);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
       }
     };
   }, [isPlaying, gameOver, smileScore, highScore]);
+
+  const startGame = () => {
+    console.log('Iniciando nuevo juego');
+    setIsPlaying(true);
+    setGameOver(false);
+    setSmileScore(0);
+    setDetectionScore(0);
+    setTimeLeft(10);
+    lastScoreUpdateRef.current = Date.now();
+  };
 
   if (isModelLoading) {
     return (
