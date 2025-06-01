@@ -50,6 +50,7 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
   const [missedSmiles, setMissedSmiles] = useState(0);
   const [spawnInterval, setSpawnInterval] = useState(INITIAL_SPAWN_INTERVAL);
   const [gameTime, setGameTime] = useState(0);
+  const [totalSmilingEmojis, setTotalSmilingEmojis] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Load high score from localStorage
@@ -86,6 +87,7 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
     setMissedSmiles(0);
     setSpawnInterval(INITIAL_SPAWN_INTERVAL);
     setGameTime(0);
+    setTotalSmilingEmojis(0);
   };
 
   // Timer effect
@@ -119,6 +121,7 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
       const containerRect = container.getBoundingClientRect();
       const emojiSize = 48;
       const padding = 20;
+      const topOffset = 100; // Espacio para el texto del score
 
       const isSmiling = Math.random() > 0.4;
       const emoji = {
@@ -128,10 +131,14 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
           : NON_SMILING_EMOJIS[Math.floor(Math.random() * NON_SMILING_EMOJIS.length)],
         position: {
           x: Math.random() * (containerRect.width - emojiSize - padding * 2) + padding,
-          y: Math.random() * (containerRect.height - emojiSize - padding * 2) + padding
+          y: Math.random() * (containerRect.height - emojiSize - padding * 2 - topOffset) + topOffset + padding
         },
         isSmiling
       };
+
+      if (isSmiling) {
+        setTotalSmilingEmojis(prev => prev + 1);
+      }
 
       setEmojis(prev => [...prev, emoji]);
 
@@ -204,16 +211,16 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
       ref={containerRef}
       className="relative w-full h-[80vh] bg-gradient-to-br from-pink-50 to-blue-50 rounded-3xl overflow-hidden"
     >
-      <div className="absolute top-4 left-4 text-2xl font-bold text-blue-600">
+      <div className="absolute top-4 left-4 text-2xl font-bold text-blue-600 z-10">
         Puntuación: {score}
       </div>
-      <div className="absolute top-4 right-4 text-xl text-blue-600">
+      <div className="absolute top-4 right-4 text-xl text-blue-600 z-10">
         Tiempo: {GAME_DURATION - gameTime}s
       </div>
-      <div className="absolute top-16 left-4 text-lg text-blue-600">
-        Emojis sonrientes: {currentSmilingEmojis}
+      <div className="absolute top-16 left-4 text-lg text-blue-600 z-10">
+        Total emojis sonrientes: {totalSmilingEmojis}
       </div>
-      <div className="absolute top-16 right-4 text-lg text-red-500">
+      <div className="absolute top-16 right-4 text-lg text-red-500 z-10">
         Emojis perdidos: {missedSmiles}/{MAX_MISSED_SMILES}
       </div>
       <AnimatePresence>
