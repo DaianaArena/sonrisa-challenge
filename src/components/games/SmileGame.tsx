@@ -28,7 +28,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     return 0;
   });
   const animationFrameRef = useRef<number>();
-  const smileStartTimeRef = useRef<number | null>(null);
+  const lastScoreUpdateRef = useRef<number>(0);
 
   // Agregar efecto para debug del score
   useEffect(() => {
@@ -165,45 +165,24 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
         const smileDetectionScore = calculateSmileScore(landmarks);
         console.log('Score de detección de sonrisa:', smileDetectionScore);
-        const isSmileDetected = smileDetectionScore > 20;
+        const isSmileDetected = smileDetectionScore >= 80;
         console.log('¿Sonrisa detectada?:', isSmileDetected);
         setIsSmiling(isSmileDetected);
         
-        // Lógica para el score de sonrisa ininterrumpida
-        console.log('Estado del juego:', { isPlaying, gameOver });
+        // Lógica para el score de sonrisa
         if (isPlaying) {
           const now = Date.now();
-          console.log('Estado de la sonrisa:', {
-            isSmileDetected,
-            smileStartTime: smileStartTimeRef.current,
-            tiempoTranscurrido: smileStartTimeRef.current ? now - smileStartTimeRef.current : 0
-          });
           
           if (isSmileDetected) {
-            // Si es la primera vez que detectamos la sonrisa, guardamos el tiempo
-            if (smileStartTimeRef.current === null) {
-              console.log('Iniciando conteo de sonrisa');
-              smileStartTimeRef.current = now;
-            }
-            
-            // Si han pasado más de 1 segundo desde que empezó la sonrisa
-            if (now - smileStartTimeRef.current >= 1000) {
-              console.log('Un segundo de sonrisa completado, incrementando score');
+            // Si han pasado 10ms desde la última actualización
+            if (now - lastScoreUpdateRef.current >= 10) {
+              console.log('Incrementando score - Sonrisa detectada >= 80');
               setSmileScore(prevScore => {
                 const newScore = prevScore + 1;
                 console.log('Nuevo score del juego:', newScore);
                 return newScore;
               });
-              // Reiniciamos el tiempo para el siguiente punto
-              smileStartTimeRef.current = now;
-            } else {
-              console.log('Tiempo transcurrido desde inicio de sonrisa:', now - smileStartTimeRef.current);
-            }
-          } else {
-            // Si se interrumpe la sonrisa, reiniciamos el contador
-            if (smileStartTimeRef.current !== null) {
-              console.log('Sonrisa interrumpida, reiniciando contador');
-              smileStartTimeRef.current = null;
+              lastScoreUpdateRef.current = now;
             }
           }
         }
@@ -248,24 +227,8 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             ctx.stroke();
           }
         }
-
-        // Verificar si el juego debe terminar
-        if (isPlaying && !isSmileDetected) {
-          setGameOver(true);
-          setIsPlaying(false);
-          if (smileScore > highScore) {
-            setHighScore(smileScore);
-            localStorage.setItem('smileGameHighScore', smileScore.toString());
-          }
-          return;
-        }
-      } else if (isPlaying) {
-        setGameOver(true);
-        setIsPlaying(false);
-        if (smileScore > highScore) {
-          setHighScore(smileScore);
-          localStorage.setItem('smileGameHighScore', smileScore.toString());
-        }
+      } else {
+        console.log('No se detectó ninguna cara');
       }
     } catch (error) {
       console.error('Error detecting smile:', error);
@@ -284,8 +247,8 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     
     if (isPlaying && !gameOver) {
       console.log('Iniciando juego, reiniciando contadores');
-      smileStartTimeRef.current = null;
-      setSmileScore(0); // Aseguramos que el score comience en 0
+      lastScoreUpdateRef.current = Date.now();
+      setSmileScore(0);
       timer = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -384,7 +347,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
                 setGameOver(false);
                 setSmileScore(0);
                 setTimeLeft(10);
-                smileStartTimeRef.current = null;
+                lastScoreUpdateRef.current = Date.now();
                 console.log('Nuevo estado después de iniciar:', {
                   isPlaying: true,
                   gameOver: false,
