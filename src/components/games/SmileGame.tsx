@@ -163,9 +163,9 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
       if (faceDetected) {
         console.log('Procesando landmarks de la cara...');
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
-        const score = calculateSmileScore(landmarks);
-        console.log('Score calculado:', score);
-        const isSmileDetected = score > 20;
+        const smileDetectionScore = calculateSmileScore(landmarks);
+        console.log('Score de detección de sonrisa:', smileDetectionScore);
+        const isSmileDetected = smileDetectionScore > 20;
         console.log('¿Sonrisa detectada?:', isSmileDetected);
         setIsSmiling(isSmileDetected);
         
@@ -185,11 +185,13 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
               console.log('Un segundo de sonrisa completado, incrementando score');
               setSmileScore(prevScore => {
                 const newScore = prevScore + 1;
-                console.log('Nuevo score:', newScore);
+                console.log('Nuevo score del juego:', newScore);
                 return newScore;
               });
               // Reiniciamos el tiempo para el siguiente punto
               smileStartTimeRef.current = now;
+            } else {
+              console.log('Tiempo transcurrido desde inicio de sonrisa:', now - smileStartTimeRef.current);
             }
           } else {
             // Si se interrumpe la sonrisa, reiniciamos el contador
