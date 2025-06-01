@@ -74,6 +74,45 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     return normalizedScore;
   };
 
+  // Iniciar la detección cuando el componente se monte
+  useEffect(() => {
+    console.log('Estado inicial:', {
+      isModelLoading,
+      detectorExists: !!detector,
+      webcamRefExists: !!webcamRef.current,
+      videoReady: webcamRef.current?.video?.readyState === 4
+    });
+
+    const startDetection = () => {
+      if (!isModelLoading && detector && webcamRef.current?.video) {
+        const video = webcamRef.current.video;
+        if (video.readyState === 4) {
+          console.log('Video listo, iniciando detección facial...');
+          detectSmile();
+        } else {
+          console.log('Esperando a que el video esté listo...', {
+            readyState: video.readyState
+          });
+          video.addEventListener('loadeddata', () => {
+            console.log('Video cargado, iniciando detección...');
+            detectSmile();
+          });
+        }
+      }
+    };
+
+    startDetection();
+    
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (webcamRef.current?.video) {
+        webcamRef.current.video.removeEventListener('loadeddata', detectSmile);
+      }
+    };
+  }, [isModelLoading, detector]);
+
   // Función para detectar la sonrisa en cada frame
   const detectSmile = async () => {
     if (!detector || !webcamRef.current) {
@@ -166,27 +205,6 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     }
     animationFrameRef.current = requestAnimationFrame(detectSmile);
   };
-
-  // Iniciar la detección cuando el componente se monte
-  useEffect(() => {
-    console.log('Estado inicial:', {
-      isModelLoading,
-      detectorExists: !!detector,
-      webcamRefExists: !!webcamRef.current,
-      videoReady: webcamRef.current?.video?.readyState === 4
-    });
-
-    if (!isModelLoading && detector) {
-      console.log('Iniciando detección facial...');
-      detectSmile();
-    }
-    
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [isModelLoading, detector]);
 
   // Efecto para manejar el temporizador
   useEffect(() => {
