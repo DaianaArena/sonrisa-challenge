@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GameResult from '../GameResult';
 
@@ -45,6 +45,7 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
   const [gameOver, setGameOver] = useState(false);
   const [emojis, setEmojis] = useState<Array<{ id: number; emoji: string; position: { x: number; y: number }; isSmiling: boolean }>>([]);
   const [gameStarted, setGameStarted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Load high score from localStorage
   const [highScore, setHighScore] = useState(() => {
@@ -80,10 +81,17 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
   };
 
   useEffect(() => {
-    if (!gameStarted || gameOver) return;
+    if (!gameStarted || gameOver || !containerRef.current) return;
 
     const spawnEmoji = () => {
       if (emojis.length >= MAX_EMOJIS) return;
+
+      const container = containerRef.current;
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const emojiSize = 48; // Tamaño aproximado del emoji en píxeles
+      const padding = 20; // Padding para evitar que los emojis toquen los bordes
 
       const isSmiling = Math.random() > 0.4;
       const emoji = {
@@ -92,8 +100,8 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
           ? SMILING_EMOJIS[Math.floor(Math.random() * SMILING_EMOJIS.length)]
           : NON_SMILING_EMOJIS[Math.floor(Math.random() * NON_SMILING_EMOJIS.length)],
         position: {
-          x: Math.random() * (window.innerWidth - 100),
-          y: Math.random() * (window.innerHeight - 100)
+          x: Math.random() * (containerRect.width - emojiSize - padding * 2) + padding,
+          y: Math.random() * (containerRect.height - emojiSize - padding * 2) + padding
         },
         isSmiling
       };
@@ -144,7 +152,10 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
   }
 
   return (
-    <div className="relative w-full h-[80vh] bg-gradient-to-br from-pink-50 to-blue-50 rounded-3xl overflow-hidden">
+    <div 
+      ref={containerRef}
+      className="relative w-full h-[80vh] bg-gradient-to-br from-pink-50 to-blue-50 rounded-3xl overflow-hidden"
+    >
       <div className="absolute top-4 left-4 text-2xl font-bold text-blue-600">
         Puntuación: {score}
       </div>
