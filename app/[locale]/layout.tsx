@@ -33,30 +33,18 @@ export function generateStaticParams() {
   return [{ locale: "en" }, { locale: "de" }];
 }
 
-export default async function LocaleLayout({ children, params: { locale } }: LocaleLayoutProps) {
-  let messages;
-  try {
-    messages = (await import(`../../messages/${locale}.json`)).default;
-  } catch (error) {
-    notFound();
-  }
-
+export default function LocaleLayout({
+  children,
+  params: { locale }
+}: {
+  children: React.ReactNode
+  params: { locale: string }
+}) {
   return (
-    <html lang={locale}>
-      <head>
-        <title>Ultimate frontend boilerplate</title>
-      </head>
-      <body>
-        <Providers>
-          <NextIntlClientProvider locale={locale} messages={messages}>
-            <Navbar />
-
-            {children}
-
-            <Footer/>
-          </NextIntlClientProvider>
-        </Providers>
-      </body>
-    </html>
-  );
+    <div className="min-h-screen bg-gradient-to-br from-pink-100 to-blue-100">
+      <main className="container mx-auto px-4 py-8">
+        {children}
+      </main>
+    </div>
+  )
 }

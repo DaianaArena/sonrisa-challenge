@@ -1,6 +1,7 @@
 {
     "Index": {
-      "title": "The ultimate frontend boilerplate",
+      "title": "Sonrisa Challenge",
+      "description": "A fun game to support Expedición Sonrisa",
       "header": "This template aims to streamline the development process by providing a well-architected, scalable, and visually engaging starting point. The Ultimate Frontend Template is crafted to be adaptable, allowing developers to kickstart projects efficiently while maintaining the flexibility to tailor the template to specific project requirements.",
       "titleT":" Localized Content for Personalized Experiences",
       "descT": " Create localized versions of your content, ensuring that users feel at home by interacting with your application in their preferred language. ",

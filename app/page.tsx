@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
 import { motion } from 'framer-motion'
-import StartScreen from '../components/StartScreen'
+import StartScreen from './components/StartScreen'
 
 export default function Home() {
   return (
@@ -14,4 +14,4 @@ export default function Home() {
       <StartScreen />
     </motion.div>
   )
-}
+} 
