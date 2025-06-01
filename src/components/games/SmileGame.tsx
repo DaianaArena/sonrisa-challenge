@@ -257,7 +257,6 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
       lastScoreUpdateRef.current = Date.now();
       setSmileScore(0);
       setDetectionScore(0);
-      setTimeLeft(10); // Reiniciamos a 10 segundos
 
       // Limpiamos cualquier timer existente
       if (timerRef.current) {
