@@ -177,11 +177,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             // Si han pasado 10ms desde la última actualización
             if (now - lastScoreUpdateRef.current >= 10) {
               console.log('Incrementando score - Sonrisa detectada >= 50');
-              setSmileScore(prevScore => {
-                const newScore = prevScore + 1;
-                console.log('Nuevo score del juego:', newScore);
-                return newScore;
-              });
+              setSmileScore(smileDetectionScore);
               lastScoreUpdateRef.current = now;
             }
           }
