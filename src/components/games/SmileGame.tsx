@@ -28,6 +28,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     return 0;
   });
   const animationFrameRef = useRef<number>();
+  const lastScoreUpdateRef = useRef<number>(0);
 
   // Cargar el modelo de detección de landmarks
   useEffect(() => {
@@ -71,6 +72,14 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     );
 
     const smileRatio = mouthWidth / mouthHeight;
+    console.log('Métricas de sonrisa:', {
+      mouthWidth,
+      mouthHeight,
+      smileRatio,
+      normalizedScore: Math.min(Math.max((smileRatio - 1.2) * 150, 0), 100)
+    });
+    
+    // Aumentamos el umbral y reducimos la sensibilidad
     const normalizedScore = Math.min(Math.max((smileRatio - 1.2) * 150, 0), 100);
     return normalizedScore;
   };
@@ -138,11 +147,16 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         
         // Solo actualizar el score si el juego está activo y se detecta una sonrisa
         if (isPlaying && isSmileDetected) {
-          setSmileScore(prevScore => {
-            const newScore = Math.min(prevScore + 10, 100);
-            console.log('Actualizando score:', { prevScore, newScore, isSmileDetected });
-            return newScore;
-          });
+          const now = Date.now();
+          // Actualizar el score cada segundo
+          if (now - lastScoreUpdateRef.current >= 1000) {
+            setSmileScore(prevScore => {
+              const newScore = Math.min(prevScore + 10, 100);
+              console.log('Actualizando score:', { prevScore, newScore, isSmileDetected });
+              return newScore;
+            });
+            lastScoreUpdateRef.current = now;
+          }
         }
 
         // Dibujar los puntos
@@ -219,6 +233,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     let timer: NodeJS.Timeout;
     
     if (isPlaying && !gameOver) {
+      lastScoreUpdateRef.current = Date.now(); // Resetear el tiempo de la última actualización
       timer = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
