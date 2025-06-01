@@ -252,6 +252,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
       timer = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
+            console.log('Tiempo terminado, finalizando juego');
             setGameOver(true);
             setIsPlaying(false);
             if (smileScore > highScore) {
@@ -315,13 +316,13 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             width={640}
             height={480}
           />
+          <div className="absolute top-4 left-4 z-10 text-2xl font-bold text-white drop-shadow-lg">
+            Score: {smileScore}
+          </div>
           {isPlaying && (
             <>
               <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
                 Tiempo: {timeLeft}s
-              </div>
-              <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
-                Score: {smileScore}
               </div>
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
                 {smileScore < 10 ? '¡Sonríe más!' : '¡Bien! Mantén la sonrisa'}
@@ -337,23 +338,12 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
           <div className="text-center">
             <button
               onClick={() => {
-                console.log('Iniciando nuevo juego - Estado actual:', {
-                  isPlaying,
-                  gameOver,
-                  isFaceDetected,
-                  smileScore
-                });
+                console.log('Iniciando nuevo juego');
                 setIsPlaying(true);
                 setGameOver(false);
                 setSmileScore(0);
                 setTimeLeft(10);
                 lastScoreUpdateRef.current = Date.now();
-                console.log('Nuevo estado después de iniciar:', {
-                  isPlaying: true,
-                  gameOver: false,
-                  smileScore: 0,
-                  timeLeft: 10
-                });
               }}
               disabled={!isFaceDetected}
               className={`px-6 py-2 rounded-lg mb-4 ${
