@@ -57,7 +57,7 @@ export default function GameResult({ score, highScore, onRestart, onBack, gameMo
         {score} {gameMode === 'emoji' ? 'emojis' : 'puntos'}
       </div>
 
-      {isNewRecord && (
+      {isNewRecord ? (
         <motion.div
           className="text-green-500 font-bold mb-4"
           initial={{ scale: 0 }}
@@ -66,6 +66,10 @@ export default function GameResult({ score, highScore, onRestart, onBack, gameMo
         >
           ¡Nuevo Récord! 🏆
         </motion.div>
+      ) : (
+        <div className="text-gray-600 mb-4">
+          Mejor puntuación: {highScore} {gameMode === 'emoji' ? 'emojis' : 'puntos'}
+        </div>
       )}
 
       <p className="text-gray-600 mb-6">

@@ -56,7 +56,8 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
   // Load high score from localStorage
   const [highScore, setHighScore] = useState(() => {
     if (typeof window !== 'undefined') {
-      return parseInt(localStorage.getItem('emojiGameHighScore') || '0');
+      const savedScore = localStorage.getItem('emojiGameHighScore');
+      return savedScore ? parseInt(savedScore) : 0;
     }
     return 0;
   });
@@ -64,11 +65,12 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
   const handleGameOver = useCallback((reason: 'time' | 'missed' | 'wrong') => {
     setGameOver(true);
     // Update high score if current score is higher
-    if (score > highScore) {
+    const currentHighScore = parseInt(localStorage.getItem('emojiGameHighScore') || '0');
+    if (score > currentHighScore) {
       setHighScore(score);
       localStorage.setItem('emojiGameHighScore', score.toString());
     }
-  }, [score, highScore]);
+  }, [score]);
 
   const handleEmojiClick = (isSmiling: boolean, id: number) => {
     if (isSmiling) {
