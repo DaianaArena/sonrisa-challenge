@@ -23,7 +23,6 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     }
     return 0;
   });
-  const requestRef = useRef<number>();
   const previousTimeRef = useRef<number>();
 
   // Cargar el modelo de detección de landmarks

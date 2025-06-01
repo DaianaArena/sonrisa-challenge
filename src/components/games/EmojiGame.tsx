@@ -62,22 +62,21 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
     return 0;
   });
 
-  const handleGameOver = useCallback((reason: 'time' | 'missed' | 'wrong') => {
+  const handleGameOver = useCallback(() => {
     setGameOver(true);
     // Update high score if current score is higher
-    const currentHighScore = parseInt(localStorage.getItem('emojiGameHighScore') || '0');
-    if (score > currentHighScore) {
+    if (score > highScore) {
       setHighScore(score);
       localStorage.setItem('emojiGameHighScore', score.toString());
     }
-  }, [score]);
+  }, [score, highScore]);
 
   const handleEmojiClick = (isSmiling: boolean, id: number) => {
     if (isSmiling) {
       setScore(prev => prev + 1);
       setEmojis(prev => prev.filter(emoji => emoji.id !== id));
     } else {
-      handleGameOver('wrong');
+      handleGameOver();
     }
   };
 
@@ -152,7 +151,7 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
             setMissedSmiles(prev => {
               const newMissed = prev + 1;
               if (newMissed >= MAX_MISSED_SMILES) {
-                handleGameOver('missed');
+                handleGameOver();
               }
               return newMissed;
             });
@@ -163,7 +162,7 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
     };
 
     const spawnTimer = setInterval(spawnEmoji, spawnInterval);
-    const gameTimer = setTimeout(() => handleGameOver('time'), GAME_DURATION * 1000);
+    const gameTimer = setTimeout(() => handleGameOver(), GAME_DURATION * 1000);
 
     return () => {
       clearInterval(spawnTimer);
@@ -205,8 +204,6 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
       </motion.div>
     );
   }
-
-  const currentSmilingEmojis = emojis.filter(e => e.isSmiling).length;
 
   return (
     <div 
