@@ -56,10 +56,13 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
   // Función para calcular el score de sonrisa basado en los landmarks
   const calculateSmileScore = (landmarks: number[][]) => {
+    // Puntos para el ancho de la boca (esquinas)
     const leftMouth = landmarks[61];
     const rightMouth = landmarks[291];
-    const topLip = landmarks[13];
-    const bottomLip = landmarks[14];
+
+    // Puntos para la altura de la boca (centro superior e inferior)
+    const topLip = landmarks[0];    // Centro del labio superior
+    const bottomLip = landmarks[17]; // Centro del labio inferior
 
     const mouthWidth = Math.sqrt(
       Math.pow(rightMouth[0] - leftMouth[0], 2) +
@@ -76,11 +79,11 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
       mouthWidth: Math.round(mouthWidth),
       mouthHeight: Math.round(mouthHeight),
       smileRatio: smileRatio.toFixed(2),
-      normalizedScore: Math.round(Math.min(Math.max((smileRatio - 1.2) * 150, 0), 100))
+      normalizedScore: Math.round(Math.min(Math.max((smileRatio - 1.5) * 100, 0), 100))
     });
     
-    // Aumentamos el umbral y reducimos la sensibilidad
-    const normalizedScore = Math.min(Math.max((smileRatio - 1.2) * 150, 0), 100);
+    // Ajustamos los valores para que sean más sensibles a los cambios en el ratio
+    const normalizedScore = Math.min(Math.max((smileRatio - 1.5) * 100, 0), 100);
     return normalizedScore;
   };
 
@@ -142,7 +145,8 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
       if (faceDetected) {
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
         const score = calculateSmileScore(landmarks);
-        const isSmileDetected = score > 30;
+        // Ajustamos el umbral para la detección de sonrisa
+        const isSmileDetected = score > 20;
         setIsSmiling(isSmileDetected);
         
         // Solo actualizar el score si el juego está activo y se detecta una sonrisa
@@ -175,7 +179,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             });
 
             // Dibujar los puntos específicos que usamos para la sonrisa en rojo/verde
-            const importantPoints = [61, 291, 13, 14];
+            const importantPoints = [61, 291, 0, 17];
             importantPoints.forEach(index => {
               const point = faces[0].keypoints[index];
               ctx.beginPath();
@@ -188,6 +192,13 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             ctx.beginPath();
             ctx.moveTo(faces[0].keypoints[61].x, faces[0].keypoints[61].y);
             ctx.lineTo(faces[0].keypoints[291].x, faces[0].keypoints[291].y);
+            ctx.strokeStyle = isSmileDetected ? 'rgba(0, 255, 0, 0.8)' : 'rgba(255, 0, 0, 0.8)';
+            ctx.stroke();
+
+            // Dibujar línea vertical para la altura
+            ctx.beginPath();
+            ctx.moveTo(faces[0].keypoints[0].x, faces[0].keypoints[0].y);
+            ctx.lineTo(faces[0].keypoints[17].x, faces[0].keypoints[17].y);
             ctx.strokeStyle = isSmileDetected ? 'rgba(0, 255, 0, 0.8)' : 'rgba(255, 0, 0, 0.8)';
             ctx.stroke();
           }
