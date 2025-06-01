@@ -73,7 +73,8 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     const smileRatio = mouthWidth / mouthHeight;
 
     // Normalizar el score entre 0 y 100
-    const normalizedScore = Math.min(Math.max((smileRatio - 1.5) * 100, 0), 100);
+    // Ajustamos los valores para hacer más sensible la detección
+    const normalizedScore = Math.min(Math.max((smileRatio - 1.2) * 150, 0), 100);
     return normalizedScore;
   };
 
@@ -93,7 +94,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         setSmileScore(score);
 
         // Si el score es muy bajo (no hay sonrisa), terminar el juego
-        if (score < 20) {
+        if (score < 15) { // Reducimos el umbral para hacer más sensible la detección
           setGameOver(true);
           setIsPlaying(false);
           if (smileScore > highScore) {
@@ -201,24 +202,32 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             height={480}
           />
           {isPlaying && (
-            <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
-              Tiempo: {timeLeft}s
-            </div>
+            <>
+              <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
+                Tiempo: {timeLeft}s
+              </div>
+              <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
+                Score: {Math.round(smileScore)}
+              </div>
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
+                {smileScore < 15 ? '¡Sonríe más!' : '¡Bien! Mantén la sonrisa'}
+              </div>
+            </>
           )}
         </div>
 
         {!isPlaying && (
-          <button
-            onClick={startGame}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg"
-          >
-            {timeLeft === 10 ? 'Iniciar Juego' : 'Reintentar'}
-          </button>
-        )}
-
-        {isPlaying && (
-          <div className="text-xl">
-            Score: {Math.round(smileScore)}
+          <div className="text-center">
+            <button
+              onClick={startGame}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg mb-4"
+            >
+              {timeLeft === 10 ? 'Iniciar Juego' : 'Reintentar'}
+            </button>
+            <p className="text-gray-600">
+              Mantén una sonrisa durante 10 segundos.<br />
+              El juego termina si dejas de sonreír o si no se detecta tu cara.
+            </p>
           </div>
         )}
       </div>
