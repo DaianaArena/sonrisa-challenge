@@ -18,7 +18,7 @@ export default function StartScreen() {
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <h1 className="text-4xl font-bold text-blue-600 mb-6">Juegos de Sonrisa</h1>
+      <h1 className="text-4xl font-bold text-blue-600 mb-6">Sonrisa Challenge</h1>
       
       <p className="text-lg text-gray-600 mb-8">
         ¡Demuestra tu mejor sonrisa y diviértete con nuestros juegos!
@@ -48,6 +48,7 @@ export default function StartScreen() {
 
       <div className="mt-8 text-sm text-gray-500">
         <p>¡Compite por la mejor puntuación!</p>
+        {/*
         <p>
           Visita{' '}
           <a 
@@ -59,6 +60,8 @@ export default function StartScreen() {
             Expedición Sonrisa
           </a>
         </p>
+        */}
+        
       </div>
     </motion.div>
   );
