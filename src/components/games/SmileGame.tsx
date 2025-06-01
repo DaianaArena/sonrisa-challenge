@@ -81,11 +81,10 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
   // Función para detectar la sonrisa en cada frame
   const detectSmile = async () => {
-    if (!detector || !webcamRef.current || !isPlaying) {
+    if (!detector || !webcamRef.current) {
       console.log('Condiciones iniciales:', {
         detector: !!detector,
-        webcamRef: !!webcamRef.current,
-        isPlaying
+        webcamRef: !!webcamRef.current
       });
       return;
     }
@@ -105,13 +104,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         console.log('Cara detectada, procesando landmarks...');
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
         console.log('Número de landmarks:', landmarks.length);
-        console.log('Landmarks de la boca:', {
-          leftMouth: landmarks[61],
-          rightMouth: landmarks[291],
-          topLip: landmarks[13],
-          bottomLip: landmarks[14]
-        });
-
+        
         const score = calculateSmileScore(landmarks);
         console.log('Score calculado:', score);
         setSmileScore(score);
@@ -131,11 +124,16 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
               ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
               ctx.fillStyle = 'rgba(0, 150, 255, 0.8)';
               ctx.fill();
-              
-              // Dibujar el número del punto
-              ctx.font = '8px Arial';
-              ctx.fillStyle = 'white';
-              ctx.fillText(index.toString(), point.x + 4, point.y + 4);
+            });
+
+            // Dibujar los puntos específicos que usamos para la sonrisa en rojo
+            const importantPoints = [61, 291, 13, 14];
+            importantPoints.forEach(index => {
+              const point = faces[0].keypoints[index];
+              ctx.beginPath();
+              ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI);
+              ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+              ctx.fill();
             });
 
             console.log('Puntos dibujados');
@@ -146,8 +144,8 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
           console.log('No se encontró el elemento canvas');
         }
 
-        // Si el score es muy bajo (no hay sonrisa), terminar el juego
-        if (score < 10) {
+        // Solo verificar el score si el juego está activo
+        if (isPlaying && score < 10) {
           console.log('Score muy bajo, terminando juego');
           setGameOver(true);
           setIsPlaying(false);
@@ -159,7 +157,32 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         }
       } else {
         console.log('No se detectó ninguna cara');
-        // Si no se detecta cara, mostrar mensaje de error
+        // Solo mostrar mensaje de error si el juego está activo
+        if (isPlaying) {
+          const canvas = canvasRef.current;
+          if (canvas) {
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.font = 'bold 24px Arial';
+              ctx.fillStyle = 'red';
+              ctx.textAlign = 'center';
+              ctx.fillText('No se detecta cara', canvas.width / 2, canvas.height / 2);
+            }
+          }
+          setGameOver(true);
+          setIsPlaying(false);
+          if (smileScore > highScore) {
+            setHighScore(smileScore);
+            localStorage.setItem('smileGameHighScore', smileScore.toString());
+          }
+        }
+        return;
+      }
+    } catch (error) {
+      console.error('Error detecting smile:', error);
+      // Solo mostrar error si el juego está activo
+      if (isPlaying) {
         const canvas = canvasRef.current;
         if (canvas) {
           const ctx = canvas.getContext('2d');
@@ -168,29 +191,8 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             ctx.font = 'bold 24px Arial';
             ctx.fillStyle = 'red';
             ctx.textAlign = 'center';
-            ctx.fillText('No se detecta cara', canvas.width / 2, canvas.height / 2);
+            ctx.fillText('Error en la detección', canvas.width / 2, canvas.height / 2);
           }
-        }
-        setGameOver(true);
-        setIsPlaying(false);
-        if (smileScore > highScore) {
-          setHighScore(smileScore);
-          localStorage.setItem('smileGameHighScore', smileScore.toString());
-        }
-        return;
-      }
-    } catch (error) {
-      console.error('Error detecting smile:', error);
-      // Mostrar error en el canvas
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.font = 'bold 24px Arial';
-          ctx.fillStyle = 'red';
-          ctx.textAlign = 'center';
-          ctx.fillText('Error en la detección', canvas.width / 2, canvas.height / 2);
         }
       }
     }
@@ -230,29 +232,18 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     };
   }, [isPlaying, gameOver, smileScore, highScore]);
 
-  // Iniciar el juego
-  const startGame = () => {
-    setIsPlaying(true);
-    setGameOver(false);
-    setSmileScore(0);
-    setTimeLeft(10);
-    startTimeRef.current = Date.now();
-    
-    // Cancelar cualquier frame anterior antes de iniciar
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    animationFrameRef.current = requestAnimationFrame(detectSmile);
-  };
-
-  // Limpiar el animation frame cuando el componente se desmonte o cuando el juego termine
+  // Iniciar la detección cuando el componente se monte
   useEffect(() => {
+    console.log('Componente montado, iniciando detección...');
+    detectSmile();
+    
     return () => {
       if (animationFrameRef.current) {
+        console.log('Limpiando animation frame');
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [gameOver]); // Agregamos gameOver como dependencia para limpiar cuando el juego termine
+  }, []);
 
   if (isModelLoading) {
     return (
@@ -265,7 +256,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   }
 
   if (gameOver) {
-    return <GameResult score={Math.round(smileScore)} highScore={highScore} onRestart={startGame} onBack={onBack} />;
+    return <GameResult score={Math.round(smileScore)} highScore={highScore} onRestart={detectSmile} onBack={onBack} />;
   }
 
   return (
@@ -313,7 +304,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         {!isPlaying && (
           <div className="text-center">
             <button
-              onClick={startGame}
+              onClick={detectSmile}
               className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg mb-4"
             >
               {timeLeft === 10 ? 'Iniciar Juego' : 'Reintentar'}
