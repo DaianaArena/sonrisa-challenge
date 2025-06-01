@@ -153,14 +153,20 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     }
 
     try {
+      console.log('Intentando detectar caras...');
       const faces = await detector.estimateFaces(video);
+      console.log('Caras detectadas:', faces.length);
+      
       const faceDetected = faces.length > 0;
       setIsFaceDetected(faceDetected);
       
       if (faceDetected) {
+        console.log('Procesando landmarks de la cara...');
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
         const score = calculateSmileScore(landmarks);
+        console.log('Score calculado:', score);
         const isSmileDetected = score > 20;
+        console.log('¿Sonrisa detectada?:', isSmileDetected);
         setIsSmiling(isSmileDetected);
         
         // Lógica para el score de sonrisa ininterrumpida
