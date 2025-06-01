@@ -165,8 +165,8 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
         const smileDetectionScore = calculateSmileScore(landmarks);
         console.log('Score de detección de sonrisa:', smileDetectionScore);
-        const isSmileDetected = smileDetectionScore >= 80;
-        console.log('¿Sonrisa detectada?:', isSmileDetected);
+        const isSmileDetected = smileDetectionScore >= 50;
+        console.log('¿Sonrisa detectada?:', isSmileDetected, 'Score:', smileDetectionScore);
         setIsSmiling(isSmileDetected);
         
         // Lógica para el score de sonrisa
@@ -176,7 +176,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
           if (isSmileDetected) {
             // Si han pasado 10ms desde la última actualización
             if (now - lastScoreUpdateRef.current >= 10) {
-              console.log('Incrementando score - Sonrisa detectada >= 80');
+              console.log('Incrementando score - Sonrisa detectada >= 50');
               setSmileScore(prevScore => {
                 const newScore = prevScore + 1;
                 console.log('Nuevo score del juego:', newScore);
@@ -316,13 +316,13 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             width={640}
             height={480}
           />
-          <div className="absolute top-4 left-4 z-10 text-2xl font-bold text-white drop-shadow-lg">
-            Score: {smileScore}
-          </div>
           {isPlaying && (
             <>
               <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
                 Tiempo: {timeLeft}s
+              </div>
+              <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
+                Score: {smileScore}
               </div>
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
                 {smileScore < 10 ? '¡Sonríe más!' : '¡Bien! Mantén la sonrisa'}
