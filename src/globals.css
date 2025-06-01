@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 }
@@ -12,12 +12,12 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f3f4f6;
+  background-image: linear-gradient(to bottom right, #fce7f3, #dbeafe);
 }
 
 @layer components {
   .card {
-    @apply bg-white rounded-3xl shadow-lg p-8;
+    @apply bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg p-8;
   }
 
   .btn-primary {
@@ -25,6 +25,6 @@ body {
   }
 
   .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg transition-colors;
+    @apply bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-lg transition-colors;
   }
 } 
