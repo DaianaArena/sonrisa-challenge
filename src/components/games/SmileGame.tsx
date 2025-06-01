@@ -116,6 +116,13 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             detectSmile();
           });
         }
+      } else {
+        console.log('No se puede iniciar la detección:', {
+          isModelLoading,
+          detectorExists: !!detector,
+          webcamRefExists: !!webcamRef.current,
+          videoReady: webcamRef.current?.video?.readyState === 4
+        });
       }
     };
 
@@ -133,12 +140,15 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
   // Función para detectar la sonrisa en cada frame
   const detectSmile = async () => {
+    console.log('Ejecutando detectSmile...');
     if (!detector || !webcamRef.current) {
+      console.log('No se puede detectar: detector o webcam no disponibles');
       return;
     }
 
     const video = webcamRef.current.video;
     if (!video || video.readyState !== 4) {
+      console.log('Video no está listo:', video?.readyState);
       return;
     }
 
