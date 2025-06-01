@@ -1,6 +1,18 @@
 {
     "Index": {
       "title": "Sonrisa Challenge",
-      "description": "Un juego divertido para apoyar a Expedición Sonrisa"
+      "description": "¡Ayuda a apoyar a Expedición Sonrisa jugando este divertido juego! Elige tu modo:",
+      "emojiMode": {
+        "title": "Modo Emoji Click",
+        "description": "¡Haz clic en los emojis sonrientes!"
+      },
+      "smileMode": {
+        "title": "Modo Detector de Sonrisas",
+        "description": "¡Mantén tu sonrisa para ganar puntos!"
+      },
+      "footer": {
+        "scores": "Todas las puntuaciones se guardan localmente en tu dispositivo.",
+        "visit": "Visita"
+      }
     }
   }

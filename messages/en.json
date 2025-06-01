@@ -1,7 +1,7 @@
 {
     "Index": {
       "title": "Sonrisa Challenge",
-      "description": "A fun game to support Expedición Sonrisa",
+      "description": "Help support Expedición Sonrisa by playing this fun game! Choose your mode:",
       "header": "This template aims to streamline the development process by providing a well-architected, scalable, and visually engaging starting point. The Ultimate Frontend Template is crafted to be adaptable, allowing developers to kickstart projects efficiently while maintaining the flexibility to tailor the template to specific project requirements.",
       "titleT":" Localized Content for Personalized Experiences",
       "descT": " Create localized versions of your content, ensuring that users feel at home by interacting with your application in their preferred language. ",
@@ -13,8 +13,19 @@
       "descFM": "Keep your projects modern and engaging by leveraging Framer Motion's support for cutting-edge animation techniques, giving your users a taste of the latest trends in UI/UX design.",
       "ctaDOCS": "Learn more",
       
-      "support":"Use this template"
-      
+      "support":"Use this template",
 
+      "emojiMode": {
+        "title": "Emoji Click Mode",
+        "description": "Click on smiling emojis!"
+      },
+      "smileMode": {
+        "title": "Smile Detection Mode",
+        "description": "Keep smiling to score points!"
+      },
+      "footer": {
+        "scores": "All scores are saved locally on your device.",
+        "visit": "Visit"
+      }
     }
   }
