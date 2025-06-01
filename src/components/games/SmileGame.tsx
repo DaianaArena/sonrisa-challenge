@@ -73,10 +73,10 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
     const smileRatio = mouthWidth / mouthHeight;
     console.log('Métricas de sonrisa:', {
-      mouthWidth,
-      mouthHeight,
-      smileRatio,
-      normalizedScore: Math.min(Math.max((smileRatio - 1.2) * 150, 0), 100)
+      mouthWidth: Math.round(mouthWidth),
+      mouthHeight: Math.round(mouthHeight),
+      smileRatio: smileRatio.toFixed(2),
+      normalizedScore: Math.round(Math.min(Math.max((smileRatio - 1.2) * 150, 0), 100))
     });
     
     // Aumentamos el umbral y reducimos la sensibilidad
@@ -190,12 +190,6 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             ctx.lineTo(faces[0].keypoints[291].x, faces[0].keypoints[291].y);
             ctx.strokeStyle = isSmileDetected ? 'rgba(0, 255, 0, 0.8)' : 'rgba(255, 0, 0, 0.8)';
             ctx.stroke();
-
-            // Mostrar el score actual en el canvas
-            ctx.font = 'bold 20px Arial';
-            ctx.fillStyle = isSmileDetected ? 'rgba(0, 255, 0, 0.8)' : 'rgba(255, 0, 0, 0.8)';
-            ctx.textAlign = 'center';
-            ctx.fillText(`Score: ${Math.round(score)}`, canvas.width / 2, 30);
           }
         }
 
