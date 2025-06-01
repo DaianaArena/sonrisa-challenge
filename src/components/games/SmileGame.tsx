@@ -77,20 +77,32 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   // Función para detectar la sonrisa en cada frame
   const detectSmile = async () => {
     if (!detector || !webcamRef.current) {
+      console.log('Detector o webcam no disponibles:', {
+        detector: !!detector,
+        webcamRef: !!webcamRef.current
+      });
       return;
     }
 
     const video = webcamRef.current.video;
     if (!video || video.readyState !== 4) {
+      console.log('Video no está listo:', {
+        videoExists: !!video,
+        readyState: video?.readyState
+      });
       return;
     }
 
     try {
+      console.log('Intentando detectar caras...');
       const faces = await detector.estimateFaces(video);
+      console.log('Faces detectadas:', faces.length);
+      
       const faceDetected = faces.length > 0;
       setIsFaceDetected(faceDetected);
       
       if (faceDetected) {
+        console.log('Cara detectada, procesando landmarks...');
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
         const score = calculateSmileScore(landmarks);
         
@@ -157,7 +169,15 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
   // Iniciar la detección cuando el componente se monte
   useEffect(() => {
+    console.log('Estado inicial:', {
+      isModelLoading,
+      detectorExists: !!detector,
+      webcamRefExists: !!webcamRef.current,
+      videoReady: webcamRef.current?.video?.readyState === 4
+    });
+
     if (!isModelLoading && detector) {
+      console.log('Iniciando detección facial...');
       detectSmile();
     }
     
@@ -233,7 +253,8 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
               width: '640px',
               height: '480px',
               pointerEvents: 'none',
-              zIndex: 10
+              zIndex: 10,
+              border: '2px solid rgba(255, 0, 0, 0.5)'
             }}
             width={640}
             height={480}
