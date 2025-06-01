@@ -16,6 +16,7 @@ export default function SmileGame({ onBack }: SmileGameProps) {
   const [gameStarted, setGameStarted] = useState(false)
   const [score, setScore] = useState(0)
   const [gameOver, setGameOver] = useState(false)
+  const [isCameraReady, setIsCameraReady] = useState(false)
   const [highScore, setHighScore] = useState(() => {
     if (typeof window !== 'undefined') {
       return parseInt(localStorage.getItem('smileGameHighScore') || '0')
@@ -37,39 +38,59 @@ export default function SmileGame({ onBack }: SmileGameProps) {
       }
     }
     loadModels()
+
+    // Cleanup function
+    return () => {
+      if (webcamRef.current?.video) {
+        const stream = webcamRef.current.video.srcObject as MediaStream
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop())
+        }
+      }
+    }
   }, [])
+
+  // Handle camera setup
+  const handleUserMedia = () => {
+    setIsCameraReady(true)
+  }
 
   // Game logic
   useEffect(() => {
-    if (!gameStarted || !webcamRef.current || gameOver) return
+    if (!gameStarted || !webcamRef.current || !isCameraReady || gameOver) return
 
-    let frameId: number
+    let frameId: number | null = null
     let notSmilingCount = 0
     const MAX_NOT_SMILING = 30 // About 1 second of not smiling (assuming 30fps)
 
     const detectSmile = async () => {
       if (!webcamRef.current?.video) return
 
-      const detections = await faceapi
-        .detectSingleFace(webcamRef.current.video, new faceapi.TinyFaceDetectorOptions())
-        .withFaceExpressions()
+      try {
+        const detections = await faceapi
+          .detectSingleFace(webcamRef.current.video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceExpressions()
 
-      if (detections) {
-        const isSmiling = detections.expressions.happy > 0.7
-        
-        if (isSmiling) {
-          notSmilingCount = 0
-          setScore(prev => prev + 1)
-        } else {
-          notSmilingCount++
-          if (notSmilingCount >= MAX_NOT_SMILING) {
-            handleGameOver()
-            return
+        if (detections) {
+          const isSmiling = detections.expressions.happy > 0.7
+          
+          if (isSmiling) {
+            notSmilingCount = 0
+            setScore(prev => prev + 1)
+          } else {
+            notSmilingCount++
+            if (notSmilingCount >= MAX_NOT_SMILING) {
+              handleGameOver()
+              return
+            }
           }
         }
-      }
 
-      frameId = requestAnimationFrame(detectSmile)
+        frameId = requestAnimationFrame(detectSmile)
+      } catch (error) {
+        console.error('Error detecting smile:', error)
+        frameId = requestAnimationFrame(detectSmile)
+      }
     }
 
     detectSmile()
@@ -77,7 +98,7 @@ export default function SmileGame({ onBack }: SmileGameProps) {
     return () => {
       if (frameId) cancelAnimationFrame(frameId)
     }
-  }, [gameStarted, gameOver])
+  }, [gameStarted, gameOver, isCameraReady])
 
   const handleGameOver = () => {
     setGameOver(true)
@@ -139,6 +160,12 @@ export default function SmileGame({ onBack }: SmileGameProps) {
         mirrored
         className="rounded-3xl w-full"
         screenshotFormat="image/jpeg"
+        onUserMedia={handleUserMedia}
+        videoConstraints={{
+          facingMode: "user",
+          width: 640,
+          height: 480
+        }}
       />
     </div>
   )
