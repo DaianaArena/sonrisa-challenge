@@ -6,7 +6,7 @@ import GameLayout from '../GameLayout';
 // Game configuration
 const GAME_DURATION = 60; // seconds
 const INITIAL_SPAWN_INTERVAL = 1000; // milliseconds
-const MIN_SPAWN_INTERVAL = 500; // milliseconds
+const MIN_SPAWN_INTERVAL = 270; // milliseconds
 const MAX_EMOJIS = 5;
 const MAX_MISSED_SMILES = 3;
 
