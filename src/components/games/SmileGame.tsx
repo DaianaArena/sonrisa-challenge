@@ -177,11 +177,16 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         console.log('¿Sonrisa detectada?:', isSmileDetected, 'Score:', smileDetectionScore);
         setIsSmiling(isSmileDetected);
         
-        // Actualizamos el score directamente con el valor de detección
-        const newScore = Math.round(smileDetectionScore);
-        console.log('Intentando actualizar smileScore a:', newScore);
-        setDetectionScore(newScore);
-        setSmileScore(newScore);
+        // Solo actualizamos el score si el juego está activo
+        if (isPlaying) {
+          const newScore = Math.round(smileDetectionScore);
+          console.log('Intentando actualizar smileScore a:', newScore);
+          setDetectionScore(newScore);
+          setSmileScore(newScore);
+        } else {
+          // Si no estamos jugando, solo mostramos el score de detección
+          setDetectionScore(Math.round(smileDetectionScore));
+        }
         
         // Lógica para el score de sonrisa
         if (isPlaying) {
@@ -265,20 +270,23 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
       // Iniciamos el nuevo timer
       timerRef.current = setInterval(() => {
-        setTimeLeft(prev => {
-          console.log('Tiempo restante:', prev - 1);
-          if (prev <= 1) {
-            console.log('Tiempo terminado, finalizando juego');
-            setGameOver(true);
-            setIsPlaying(false);
-            if (smileScore > highScore) {
-              setHighScore(smileScore);
-              localStorage.setItem('smileGameHighScore', smileScore.toString());
+        // Solo decrementamos el tiempo si se detecta una sonrisa
+        if (isSmiling) {
+          setTimeLeft(prev => {
+            console.log('Tiempo restante:', prev - 1);
+            if (prev <= 1) {
+              console.log('Tiempo terminado, finalizando juego');
+              setGameOver(true);
+              setIsPlaying(false);
+              if (smileScore > highScore) {
+                setHighScore(smileScore);
+                localStorage.setItem('smileGameHighScore', smileScore.toString());
+              }
+              return 0;
             }
-            return 0;
-          }
-          return prev - 1;
-        });
+            return prev - 1;
+          });
+        }
       }, 1000);
     }
 
@@ -287,7 +295,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, [isPlaying, gameOver, smileScore, highScore]);
+  }, [isPlaying, gameOver, smileScore, highScore, isSmiling]);
 
   const startGame = () => {
     console.log('Iniciando nuevo juego');
