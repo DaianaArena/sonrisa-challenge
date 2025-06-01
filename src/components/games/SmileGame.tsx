@@ -32,7 +32,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
   // Agregar efecto para debug del score
   useEffect(() => {
-    console.log('Score actualizado:', smileScore);
+    console.log('Estado smileScore actualizado:', smileScore);
   }, [smileScore]);
 
   // Cargar el modelo de detección de landmarks
@@ -170,7 +170,9 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         setIsSmiling(isSmileDetected);
         
         // Actualizamos el score directamente con el valor de detección
-        setSmileScore(Math.round(smileDetectionScore));
+        const newScore = Math.round(smileDetectionScore);
+        console.log('Intentando actualizar smileScore a:', newScore);
+        setSmileScore(newScore);
         
         // Lógica para el score de sonrisa
         if (isPlaying) {
