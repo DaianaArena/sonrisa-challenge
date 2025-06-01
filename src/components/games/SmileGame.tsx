@@ -170,8 +170,14 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         setIsSmiling(isSmileDetected);
         
         // Lógica para el score de sonrisa ininterrumpida
+        console.log('Estado del juego:', { isPlaying, gameOver });
         if (isPlaying) {
           const now = Date.now();
+          console.log('Estado de la sonrisa:', {
+            isSmileDetected,
+            smileStartTime: smileStartTimeRef.current,
+            tiempoTranscurrido: smileStartTimeRef.current ? now - smileStartTimeRef.current : 0
+          });
           
           if (isSmileDetected) {
             // Si es la primera vez que detectamos la sonrisa, guardamos el tiempo
