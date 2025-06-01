@@ -20,6 +20,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [isFaceDetected, setIsFaceDetected] = useState(false);
+  const [isSmiling, setIsSmiling] = useState(false);
   const [highScore, setHighScore] = useState(() => {
     if (typeof window !== 'undefined') {
       return parseInt(localStorage.getItem('smileGameHighScore') || '0');
@@ -70,7 +71,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     );
 
     const smileRatio = mouthWidth / mouthHeight;
-    const normalizedScore = Math.min(Math.max((smileRatio - 1.1) * 200, 0), 100);
+    const normalizedScore = Math.min(Math.max((smileRatio - 1.0) * 300, 0), 100);
     return normalizedScore;
   };
 
@@ -116,37 +117,27 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   // Función para detectar la sonrisa en cada frame
   const detectSmile = async () => {
     if (!detector || !webcamRef.current) {
-      console.log('Detector o webcam no disponibles:', {
-        detector: !!detector,
-        webcamRef: !!webcamRef.current
-      });
       return;
     }
 
     const video = webcamRef.current.video;
     if (!video || video.readyState !== 4) {
-      console.log('Video no está listo:', {
-        videoExists: !!video,
-        readyState: video?.readyState
-      });
       return;
     }
 
     try {
-      console.log('Intentando detectar caras...');
       const faces = await detector.estimateFaces(video);
-      console.log('Faces detectadas:', faces.length);
-      
       const faceDetected = faces.length > 0;
       setIsFaceDetected(faceDetected);
       
       if (faceDetected) {
-        console.log('Cara detectada, procesando landmarks...');
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
         const score = calculateSmileScore(landmarks);
+        const isSmileDetected = score > 10;
+        setIsSmiling(isSmileDetected);
         
-        // Solo actualizar el score si el juego está activo
-        if (isPlaying) {
+        // Solo actualizar el score si el juego está activo y se detecta una sonrisa
+        if (isPlaying && isSmileDetected) {
           setSmileScore(prevScore => Math.min(prevScore + 10, 100));
         }
 
@@ -171,14 +162,21 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
               const point = faces[0].keypoints[index];
               ctx.beginPath();
               ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI);
-              ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+              ctx.fillStyle = isSmileDetected ? 'rgba(0, 255, 0, 0.8)' : 'rgba(255, 0, 0, 0.8)';
               ctx.fill();
             });
+
+            // Dibujar líneas entre los puntos de la sonrisa
+            ctx.beginPath();
+            ctx.moveTo(faces[0].keypoints[61].x, faces[0].keypoints[61].y);
+            ctx.lineTo(faces[0].keypoints[291].x, faces[0].keypoints[291].y);
+            ctx.strokeStyle = isSmileDetected ? 'rgba(0, 255, 0, 0.8)' : 'rgba(255, 0, 0, 0.8)';
+            ctx.stroke();
           }
         }
 
         // Verificar si el juego debe terminar
-        if (isPlaying && score < 10) {
+        if (isPlaying && !isSmileDetected) {
           setGameOver(true);
           setIsPlaying(false);
           if (smileScore > highScore) {
@@ -291,7 +289,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             </>
           )}
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
-            Cara detectada: {isFaceDetected ? 'Sí' : 'No'}
+            Sonrisa detectada: {isSmiling ? 'Sí' : 'No'}
           </div>
         </div>
 
