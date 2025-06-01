@@ -16,6 +16,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [detector, setDetector] = useState<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
   const [smileScore, setSmileScore] = useState(0);
+  const [detectionScore, setDetectionScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(10);
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -33,7 +34,8 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   // Agregar efecto para debug del score
   useEffect(() => {
     console.log('Estado smileScore actualizado:', smileScore);
-  }, [smileScore]);
+    console.log('Estado detectionScore actualizado:', detectionScore);
+  }, [smileScore, detectionScore]);
 
   // Cargar el modelo de detección de landmarks
   useEffect(() => {
@@ -172,6 +174,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         // Actualizamos el score directamente con el valor de detección
         const newScore = Math.round(smileDetectionScore);
         console.log('Intentando actualizar smileScore a:', newScore);
+        setDetectionScore(newScore);
         setSmileScore(newScore);
         
         // Lógica para el score de sonrisa
@@ -316,16 +319,16 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             width={640}
             height={480}
           />
+          <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
+            Score: {detectionScore}
+          </div>
           {isPlaying && (
             <>
               <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
                 Tiempo: {timeLeft}s
               </div>
-              <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
-                Score: {smileScore}
-              </div>
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
-                {smileScore < 10 ? '¡Sonríe más!' : '¡Bien! Mantén la sonrisa'}
+                {detectionScore < 10 ? '¡Sonríe más!' : '¡Bien! Mantén la sonrisa'}
               </div>
             </>
           )}
