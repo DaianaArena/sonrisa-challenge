@@ -30,6 +30,11 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   const animationFrameRef = useRef<number>();
   const smileStartTimeRef = useRef<number | null>(null);
 
+  // Agregar efecto para debug del score
+  useEffect(() => {
+    console.log('Score actualizado:', smileScore);
+  }, [smileScore]);
+
   // Cargar el modelo de detección de landmarks
   useEffect(() => {
     const loadModel = async () => {
@@ -155,14 +160,16 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
           if (isSmileDetected) {
             // Si es la primera vez que detectamos la sonrisa, guardamos el tiempo
             if (smileStartTimeRef.current === null) {
+              console.log('Iniciando conteo de sonrisa');
               smileStartTimeRef.current = now;
             }
             
             // Si han pasado más de 1 segundo desde que empezó la sonrisa
             if (now - smileStartTimeRef.current >= 1000) {
+              console.log('Un segundo de sonrisa completado, incrementando score');
               setSmileScore(prevScore => {
                 const newScore = prevScore + 1;
-                console.log('Incrementando score:', { prevScore, newScore });
+                console.log('Nuevo score:', newScore);
                 return newScore;
               });
               // Reiniciamos el tiempo para el siguiente punto
@@ -170,7 +177,10 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             }
           } else {
             // Si se interrumpe la sonrisa, reiniciamos el contador
-            smileStartTimeRef.current = null;
+            if (smileStartTimeRef.current !== null) {
+              console.log('Sonrisa interrumpida, reiniciando contador');
+              smileStartTimeRef.current = null;
+            }
           }
         }
 
@@ -249,7 +259,9 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     let timer: NodeJS.Timeout;
     
     if (isPlaying && !gameOver) {
-      smileStartTimeRef.current = null; // Reiniciamos el contador de sonrisa al iniciar
+      console.log('Iniciando juego, reiniciando contadores');
+      smileStartTimeRef.current = null;
+      setSmileScore(0); // Aseguramos que el score comience en 0
       timer = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -338,6 +350,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
           <div className="text-center">
             <button
               onClick={() => {
+                console.log('Iniciando nuevo juego');
                 setIsPlaying(true);
                 setGameOver(false);
                 setSmileScore(0);
