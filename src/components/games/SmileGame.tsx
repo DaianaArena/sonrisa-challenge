@@ -179,40 +179,90 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
     try {
       const faces = await detector.estimateFaces(video);
+      console.log('Faces detectadas:', faces.length);
       
       if (faces.length > 0) {
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
         const score = calculateSmileScore(landmarks);
+        console.log('Score calculado:', score);
         setSmileScore(score);
-        drawLandmarks(landmarks, score);
 
         // Dibujar todos los puntos de la cara para debug
         const canvas = canvasRef.current;
         if (canvas) {
           const ctx = canvas.getContext('2d');
           if (ctx) {
-            // Dibujar todos los puntos de la cara en gris claro
-            faces[0].keypoints.forEach(point => {
+            // Limpiar el canvas primero
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dibujar todos los puntos de la cara en azul claro
+            faces[0].keypoints.forEach((point, index) => {
               ctx.beginPath();
-              ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
-              ctx.fillStyle = 'rgba(200, 200, 200, 0.3)';
+              ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+              ctx.fillStyle = 'rgba(0, 150, 255, 0.8)';
               ctx.fill();
+              
+              // Dibujar el número del punto
+              ctx.font = '8px Arial';
+              ctx.fillStyle = 'white';
+              ctx.fillText(index.toString(), point.x + 4, point.y + 4);
             });
 
-            // Dibujar los puntos específicos que usamos para la sonrisa en amarillo
+            // Dibujar los puntos específicos que usamos para la sonrisa en rojo
             const importantPoints = [61, 291, 13, 14];
             importantPoints.forEach(index => {
               const point = faces[0].keypoints[index];
               ctx.beginPath();
-              ctx.arc(point.x, point.y, 4, 0, 2 * Math.PI);
-              ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+              ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI);
+              ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
               ctx.fill();
+              
+              // Dibujar el número del punto en blanco
+              ctx.font = 'bold 10px Arial';
+              ctx.fillStyle = 'white';
+              ctx.fillText(index.toString(), point.x + 8, point.y + 8);
             });
+
+            // Dibujar las líneas de la boca
+            const leftMouth = landmarks[61];
+            const rightMouth = landmarks[291];
+            const topLip = landmarks[13];
+            const bottomLip = landmarks[14];
+
+            ctx.beginPath();
+            ctx.moveTo(leftMouth[0], leftMouth[1]);
+            ctx.lineTo(rightMouth[0], rightMouth[1]);
+            ctx.lineTo(bottomLip[0], bottomLip[1]);
+            ctx.lineTo(topLip[0], topLip[1]);
+            ctx.closePath();
+            ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Mostrar información de debug
+            const mouthWidth = Math.sqrt(
+              Math.pow(rightMouth[0] - leftMouth[0], 2) +
+              Math.pow(rightMouth[1] - leftMouth[1], 2)
+            );
+            const mouthHeight = Math.sqrt(
+              Math.pow(bottomLip[0] - topLip[0], 2) +
+              Math.pow(bottomLip[1] - topLip[1], 2)
+            );
+            const smileRatio = mouthWidth / mouthHeight;
+
+            ctx.font = 'bold 16px Arial';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Ancho: ${mouthWidth.toFixed(1)}`, 10, 30);
+            ctx.fillText(`Alto: ${mouthHeight.toFixed(1)}`, 10, 50);
+            ctx.fillText(`Ratio: ${smileRatio.toFixed(2)}`, 10, 70);
+            ctx.fillText(`Score: ${score.toFixed(1)}`, 10, 90);
           }
         }
 
         // Si el score es muy bajo (no hay sonrisa), terminar el juego
         if (score < 10) {
+          console.log('Score muy bajo, terminando juego');
           setGameOver(true);
           setIsPlaying(false);
           if (smileScore > highScore) {
@@ -222,6 +272,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
           return;
         }
       } else {
+        console.log('No se detectó ninguna cara');
         // Si no se detecta cara, mostrar mensaje de error
         const canvas = canvasRef.current;
         if (canvas) {
@@ -348,7 +399,9 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             style={{
               width: '640px',
               height: '480px',
-              pointerEvents: 'none'
+              pointerEvents: 'none',
+              border: '5px solid red',
+              zIndex: 10
             }}
             width={640}
             height={480}
