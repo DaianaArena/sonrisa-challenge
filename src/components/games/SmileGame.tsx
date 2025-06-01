@@ -71,7 +71,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     );
 
     const smileRatio = mouthWidth / mouthHeight;
-    const normalizedScore = Math.min(Math.max((smileRatio - 1.0) * 300, 0), 100);
+    const normalizedScore = Math.min(Math.max((smileRatio - 1.2) * 150, 0), 100);
     return normalizedScore;
   };
 
@@ -133,12 +133,16 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
       if (faceDetected) {
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
         const score = calculateSmileScore(landmarks);
-        const isSmileDetected = score > 10;
+        const isSmileDetected = score > 30;
         setIsSmiling(isSmileDetected);
         
         // Solo actualizar el score si el juego está activo y se detecta una sonrisa
         if (isPlaying && isSmileDetected) {
-          setSmileScore(prevScore => Math.min(prevScore + 10, 100));
+          setSmileScore(prevScore => {
+            const newScore = Math.min(prevScore + 10, 100);
+            console.log('Actualizando score:', { prevScore, newScore, isSmileDetected });
+            return newScore;
+          });
         }
 
         // Dibujar los puntos
@@ -156,7 +160,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
               ctx.fill();
             });
 
-            // Dibujar los puntos específicos que usamos para la sonrisa en rojo
+            // Dibujar los puntos específicos que usamos para la sonrisa en rojo/verde
             const importantPoints = [61, 291, 13, 14];
             importantPoints.forEach(index => {
               const point = faces[0].keypoints[index];
@@ -172,6 +176,12 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
             ctx.lineTo(faces[0].keypoints[291].x, faces[0].keypoints[291].y);
             ctx.strokeStyle = isSmileDetected ? 'rgba(0, 255, 0, 0.8)' : 'rgba(255, 0, 0, 0.8)';
             ctx.stroke();
+
+            // Mostrar el score actual en el canvas
+            ctx.font = 'bold 20px Arial';
+            ctx.fillStyle = isSmileDetected ? 'rgba(0, 255, 0, 0.8)' : 'rgba(255, 0, 0, 0.8)';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Score: ${Math.round(score)}`, canvas.width / 2, 30);
           }
         }
 
