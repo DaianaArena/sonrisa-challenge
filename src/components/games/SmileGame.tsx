@@ -116,24 +116,40 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
       console.error('Error detecting smile:', error);
     }
 
-    // Actualizar el tiempo restante
-    const currentTime = Date.now();
-    const elapsedTime = (currentTime - startTimeRef.current) / 1000;
-    const remainingTime = Math.max(0, 10 - elapsedTime);
-
-    if (remainingTime <= 0) {
-      setGameOver(true);
-      setIsPlaying(false);
-      if (smileScore > highScore) {
-        setHighScore(smileScore);
-        localStorage.setItem('smileGameHighScore', smileScore.toString());
-      }
-      return;
+    // Solicitar el siguiente frame
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
     }
-
-    setTimeLeft(Math.ceil(remainingTime));
     animationFrameRef.current = requestAnimationFrame(detectSmile);
   };
+
+  // Efecto para manejar el temporizador
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (isPlaying && !gameOver) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            setGameOver(true);
+            setIsPlaying(false);
+            if (smileScore > highScore) {
+              setHighScore(smileScore);
+              localStorage.setItem('smileGameHighScore', smileScore.toString());
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [isPlaying, gameOver, smileScore, highScore]);
 
   // Iniciar el juego
   const startGame = () => {
@@ -142,17 +158,22 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     setSmileScore(0);
     setTimeLeft(10);
     startTimeRef.current = Date.now();
-    detectSmile();
+    
+    // Cancelar cualquier frame anterior antes de iniciar
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    animationFrameRef.current = requestAnimationFrame(detectSmile);
   };
 
-  // Limpiar el animation frame cuando el componente se desmonte
+  // Limpiar el animation frame cuando el componente se desmonte o cuando el juego termine
   useEffect(() => {
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  }, [gameOver]); // Agregamos gameOver como dependencia para limpiar cuando el juego termine
 
   if (isModelLoading) {
     return (
