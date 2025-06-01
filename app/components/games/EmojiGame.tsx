@@ -146,7 +146,7 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
   }
 
   return (
-    <div className="relative w-full h-[80vh] bg-gradient-to-br from-pink-50 to-blue-50 rounded-3xl overflow-hidden">
+    <div className="relative w-full h-[60vh] bg-gradient-to-br from-pink-50 to-blue-50 rounded-3xl overflow-hidden">
       <div className="absolute top-4 left-4 text-2xl font-bold text-blue-600">
         Score: {score}
       </div>

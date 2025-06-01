@@ -4,6 +4,7 @@ import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detec
 import '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
 import GameResult from '../GameResult';
+import GameLayout from '../GameLayout';
 
 interface SmileGameProps {
   onBack: () => void;
@@ -155,9 +156,11 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
   if (isModelLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-xl">Cargando modelo...</div>
-      </div>
+      <GameLayout onBack={onBack}>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-xl">Cargando modelo...</div>
+        </div>
+      </GameLayout>
     );
   }
 
@@ -166,37 +169,39 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative">
-        <Webcam
-          ref={webcamRef}
-          audio={false}
-          className="rounded-lg"
-          width={640}
-          height={480}
-        />
+    <GameLayout onBack={onBack}>
+      <div className="flex flex-col items-center justify-center w-full h-full gap-4">
+        <div className="relative">
+          <Webcam
+            ref={webcamRef}
+            audio={false}
+            className="rounded-lg max-h-[calc(100vh-12rem)]"
+            width={640}
+            height={480}
+          />
+          {isPlaying && (
+            <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
+              Tiempo: {timeLeft}s
+            </div>
+          )}
+        </div>
+
+        {!isPlaying && (
+          <button
+            onClick={startGame}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg"
+          >
+            {timeLeft === 10 ? 'Iniciar Juego' : 'Reintentar'}
+          </button>
+        )}
+
         {isPlaying && (
-          <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
-            Tiempo: {timeLeft}s
+          <div className="text-xl">
+            Score: {Math.round(smileScore)}
           </div>
         )}
       </div>
-
-      {!isPlaying && (
-        <button
-          onClick={startGame}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg"
-        >
-          {timeLeft === 10 ? 'Iniciar Juego' : 'Reintentar'}
-        </button>
-      )}
-
-      {isPlaying && (
-        <div className="text-xl">
-          Score: {Math.round(smileScore)}
-        </div>
-      )}
-    </div>
+    </GameLayout>
   );
 };
 

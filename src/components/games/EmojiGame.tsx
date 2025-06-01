@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GameResult from '../GameResult';
+import GameLayout from '../GameLayout';
 
 // Game configuration
 const GAME_DURATION = 60; // seconds
 const INITIAL_SPAWN_INTERVAL = 1000; // milliseconds
-const MIN_SPAWN_INTERVAL = 300; // milliseconds
+const MIN_SPAWN_INTERVAL = 500; // milliseconds
 const MAX_EMOJIS = 5;
 const MAX_MISSED_SMILES = 3;
 
@@ -98,8 +99,8 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
     const timer = setInterval(() => {
       setGameTime(prev => {
         const newTime = prev + 1;
-        // Increase spawn rate every 10 seconds
-        if (newTime % 10 === 0) {
+        // Increase spawn rate every 5 seconds
+        if (newTime % 5 === 0) {
           setSpawnInterval(prev => Math.max(MIN_SPAWN_INTERVAL, prev - 100));
         }
         return newTime;
@@ -143,7 +144,7 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
 
       setEmojis(prev => [...prev, emoji]);
 
-      // Remove emoji after a random time between 1-3 seconds
+      // Remove emoji after a random time between 1-2 seconds
       setTimeout(() => {
         setEmojis(prev => {
           const emojiToRemove = prev.find(e => e.id === emoji.id);
@@ -158,11 +159,13 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
           }
           return prev.filter(e => e.id !== emoji.id);
         });
-      }, 1000 + Math.random() * 2000);
+      }, 1000 + Math.random() * 1000);
     };
 
     const spawnTimer = setInterval(spawnEmoji, spawnInterval);
-    const gameTimer = setTimeout(() => handleGameOver(), GAME_DURATION * 1000);
+    const gameTimer = setTimeout(() => {
+      handleGameOver();
+    }, GAME_DURATION * 1000);
 
     return () => {
       clearInterval(spawnTimer);
@@ -182,57 +185,61 @@ export default function EmojiGame({ onBack }: EmojiGameProps) {
 
   if (!gameStarted) {
     return (
-      <motion.div
-        className="card max-w-md mx-auto text-center"
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-      >
-        <h2 className="text-2xl font-bold text-blue-600 mb-4">Modo Emoji</h2>
-        <p className="text-gray-600 mb-6">
-          ¡Haz clic en los emojis sonrientes lo más rápido que puedas! 
-          Ten cuidado de no hacer clic en los que no sonríen.
-          Si dejas pasar 3 emojis sonrientes, ¡pierdes!
-        </p>
-        <motion.button
-          className="btn-primary"
-          onClick={startGame}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+      <GameLayout onBack={onBack}>
+        <motion.div
+          className="card max-w-md mx-auto text-center"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
         >
-          Iniciar Juego
-        </motion.button>
-      </motion.div>
+          <h2 className="text-2xl font-bold text-blue-600 mb-4">Modo Emoji</h2>
+          <p className="text-gray-600 mb-6">
+            ¡Haz clic en los emojis sonrientes lo más rápido que puedas! 
+            Ten cuidado de no hacer clic en los que no sonríen.
+            Si dejas pasar 3 emojis sonrientes, ¡pierdes!
+          </p>
+          <motion.button
+            className="btn-primary"
+            onClick={startGame}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Iniciar Juego
+          </motion.button>
+        </motion.div>
+      </GameLayout>
     );
   }
 
   return (
-    <div 
-      ref={containerRef}
-      className="relative w-full h-[80vh] bg-gradient-to-br from-pink-50 to-blue-50 rounded-3xl overflow-hidden"
-    >
-      <div className="absolute top-4 left-4 text-2xl font-bold text-blue-600 z-10">
-        Puntuación: {score}
+    <GameLayout onBack={onBack}>
+      <div 
+        ref={containerRef}
+        className="relative w-[calc(100%-4rem)] mx-auto h-[calc(100%-4rem)] bg-gradient-to-br from-pink-50 to-blue-50 rounded-3xl overflow-hidden"
+      >
+        <div className="absolute top-4 left-4 text-2xl font-bold text-blue-600 z-10">
+          Puntuación: {score}
+        </div>
+        <div className="absolute top-4 right-4 text-xl text-blue-600 z-10">
+          Tiempo: {Math.max(0, GAME_DURATION - gameTime)}s
+        </div>
+        <div className="absolute top-16 left-4 text-lg text-blue-600 z-10">
+          Total emojis sonrientes: {totalSmilingEmojis}
+        </div>
+        <div className="absolute top-16 right-4 text-lg text-red-500 z-10">
+          Emojis perdidos: {missedSmiles}/{MAX_MISSED_SMILES}
+        </div>
+        <AnimatePresence>
+          {emojis.map(({ id, emoji, position, isSmiling }) => (
+            <Emoji
+              key={id}
+              emoji={emoji}
+              position={position}
+              isSmiling={isSmiling}
+              onClick={() => handleEmojiClick(isSmiling, id)}
+            />
+          ))}
+        </AnimatePresence>
       </div>
-      <div className="absolute top-4 right-4 text-xl text-blue-600 z-10">
-        Tiempo: {GAME_DURATION - gameTime}s
-      </div>
-      <div className="absolute top-16 left-4 text-lg text-blue-600 z-10">
-        Total emojis sonrientes: {totalSmilingEmojis}
-      </div>
-      <div className="absolute top-16 right-4 text-lg text-red-500 z-10">
-        Emojis perdidos: {missedSmiles}/{MAX_MISSED_SMILES}
-      </div>
-      <AnimatePresence>
-        {emojis.map(({ id, emoji, position, isSmiling }) => (
-          <Emoji
-            key={id}
-            emoji={emoji}
-            position={position}
-            isSmiling={isSmiling}
-            onClick={() => handleEmojiClick(isSmiling, id)}
-          />
-        ))}
-      </AnimatePresence>
-    </div>
+    </GameLayout>
   );
 } 
