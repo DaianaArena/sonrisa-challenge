@@ -31,6 +31,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   useEffect(() => {
     const loadModel = async () => {
       try {
+        console.log('Cargando modelo de detección facial...');
         const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
         const detectorConfig: faceLandmarksDetection.MediaPipeFaceMeshTfjsModelConfig = {
           runtime: 'tfjs',
@@ -38,6 +39,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
           maxFaces: 1
         };
         const detector = await faceLandmarksDetection.createDetector(model, detectorConfig);
+        console.log('Modelo cargado exitosamente');
         setDetector(detector);
         setIsModelLoading(false);
       } catch (error) {
@@ -48,6 +50,23 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
     loadModel();
   }, []);
+
+  // Esperar a que la webcam esté lista
+  useEffect(() => {
+    if (webcamRef.current && webcamRef.current.video) {
+      const video = webcamRef.current.video;
+      const checkVideo = () => {
+        if (video.readyState === 4) {
+          console.log('Webcam lista');
+          detectSmile();
+        } else {
+          console.log('Esperando a que la webcam esté lista...');
+          setTimeout(checkVideo, 100);
+        }
+      };
+      checkVideo();
+    }
+  }, [webcamRef.current?.video]);
 
   // Función para calcular el score de sonrisa basado en los landmarks
   const calculateSmileScore = (landmarks: number[][]) => {
@@ -83,14 +102,18 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     if (!detector || !webcamRef.current) {
       console.log('Condiciones iniciales:', {
         detector: !!detector,
-        webcamRef: !!webcamRef.current
+        webcamRef: !!webcamRef.current,
+        videoReady: webcamRef.current?.video?.readyState === 4
       });
       return;
     }
 
     const video = webcamRef.current.video;
-    if (!video) {
-      console.log('No hay video disponible');
+    if (!video || video.readyState !== 4) {
+      console.log('Video no está listo:', {
+        videoExists: !!video,
+        readyState: video?.readyState
+      });
       return;
     }
 
@@ -205,8 +228,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
 
   // Iniciar la detección cuando el componente se monte
   useEffect(() => {
-    console.log('Componente montado, iniciando detección...');
-    detectSmile();
+    console.log('Componente montado, esperando a que el modelo y la webcam estén listos...');
     
     return () => {
       if (animationFrameRef.current) {
