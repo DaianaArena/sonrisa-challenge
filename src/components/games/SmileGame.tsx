@@ -14,7 +14,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [detector, setDetector] = useState<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
   const [smileScore, setSmileScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(10000);
+  const [timeLeft, setTimeLeft] = useState(10);
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [highScore, setHighScore] = useState(() => {
@@ -23,7 +23,8 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
     }
     return 0;
   });
-  const previousTimeRef = useRef<number>();
+  const startTimeRef = useRef<number>(0);
+  const animationFrameRef = useRef<number>();
 
   // Cargar el modelo de detección de landmarks
   useEffect(() => {
@@ -89,44 +90,68 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         const landmarks = faces[0].keypoints.map(point => [point.x, point.y]);
         const score = calculateSmileScore(landmarks);
         setSmileScore(score);
+
+        // Si el score es muy bajo (no hay sonrisa), terminar el juego
+        if (score < 20) {
+          setGameOver(true);
+          setIsPlaying(false);
+          if (smileScore > highScore) {
+            setHighScore(smileScore);
+            localStorage.setItem('smileGameHighScore', smileScore.toString());
+          }
+          return;
+        }
+      } else {
+        // Si no se detecta cara, terminar el juego
+        setGameOver(true);
+        setIsPlaying(false);
+        if (smileScore > highScore) {
+          setHighScore(smileScore);
+          localStorage.setItem('smileGameHighScore', smileScore.toString());
+        }
+        return;
       }
     } catch (error) {
       console.error('Error detecting smile:', error);
     }
 
-    requestAnimationFrame(detectSmile);
+    // Actualizar el tiempo restante
+    const currentTime = Date.now();
+    const elapsedTime = (currentTime - startTimeRef.current) / 1000;
+    const remainingTime = Math.max(0, 10 - elapsedTime);
+
+    if (remainingTime <= 0) {
+      setGameOver(true);
+      setIsPlaying(false);
+      if (smileScore > highScore) {
+        setHighScore(smileScore);
+        localStorage.setItem('smileGameHighScore', smileScore.toString());
+      }
+      return;
+    }
+
+    setTimeLeft(Math.ceil(remainingTime));
+    animationFrameRef.current = requestAnimationFrame(detectSmile);
   };
 
   // Iniciar el juego
   const startGame = () => {
     setIsPlaying(true);
-    setTimeLeft(10000);
+    setGameOver(false);
     setSmileScore(0);
+    setTimeLeft(10);
+    startTimeRef.current = Date.now();
     detectSmile();
   };
 
-  // Manejar el temporizador
+  // Limpiar el animation frame cuando el componente se desmonte
   useEffect(() => {
-    if (!isPlaying) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setIsPlaying(false);
-          setGameOver(true);
-          if (smileScore > highScore) {
-            setHighScore(smileScore);
-            localStorage.setItem('smileGameHighScore', smileScore.toString());
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isPlaying, smileScore, highScore]);
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
 
   if (isModelLoading) {
     return (
@@ -137,7 +162,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
   }
 
   if (gameOver) {
-    return <GameResult score={Math.round(smileScore)} highScore={highScore} onRestart={() => window.location.reload()} onBack={onBack} />;
+    return <GameResult score={Math.round(smileScore)} highScore={highScore} onRestart={startGame} onBack={onBack} />;
   }
 
   return (
@@ -152,7 +177,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         />
         {isPlaying && (
           <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
-            Tiempo: {Math.ceil((10000 - (Date.now() - (previousTimeRef.current || Date.now()))) / 1000)}s
+            Tiempo: {timeLeft}s
           </div>
         )}
       </div>
@@ -162,7 +187,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
           onClick={startGame}
           className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg"
         >
-          {timeLeft === 10000 ? 'Iniciar Juego' : 'Reintentar'}
+          {timeLeft === 10 ? 'Iniciar Juego' : 'Reintentar'}
         </button>
       )}
 
