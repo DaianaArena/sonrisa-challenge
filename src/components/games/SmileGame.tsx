@@ -364,14 +364,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
         {!isPlaying && (
           <div className="text-center">
             <button
-              onClick={() => {
-                console.log('Iniciando nuevo juego');
-                setIsPlaying(true);
-                setGameOver(false);
-                setSmileScore(0);
-                setTimeLeft(10);
-                lastScoreUpdateRef.current = Date.now();
-              }}
+              onClick={startGame}
               disabled={!isFaceDetected}
               className={`px-6 py-2 rounded-lg mb-4 ${
                 isFaceDetected 
