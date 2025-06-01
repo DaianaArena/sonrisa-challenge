@@ -322,7 +322,7 @@ const SmileGame: React.FC<SmileGameProps> = ({ onBack }) => {
                 Tiempo: {timeLeft}s
               </div>
               <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
-                Score: {Math.round(smileScore)}
+                Score: {smileScore}
               </div>
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
                 {smileScore < 10 ? '¡Sonríe más!' : '¡Bien! Mantén la sonrisa'}
